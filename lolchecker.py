@@ -42,9 +42,14 @@ def run():
 
     print('Start watching...')
     send_message('게임 추적을 시작합니다. \n추적 대상: ' + ", ".join(config.TARGET_PLAYERS), '롤 게임 추적기')
+    time_phase = -1
+
     while True:
+        time_phase += 1
         try:
             for player in playerIDs:
+                if not player['playing'] and time_phase % 4 != 0:
+                    continue
                 try:
                     spectator = lol_watcher.spectator.by_summoner('kr', player['data']['id'])
                     if not player['playing']:
@@ -62,7 +67,6 @@ def run():
                     pass
         except BaseException as error:
             print('Unexpected exception: {}'.format(error))
-        time.sleep(config.DETECT_PERIOD_SEC)
-
+        time.sleep(config.DETECT_PERIOD_SEC / config.TIMES_OF_DETECT_PERIOD_ON_PLAYING)
 
 run()
