@@ -12,6 +12,9 @@ push_service = FCMNotification(config.FCM_API_KEY)
 
 def to_timespan(delta):
     delta = delta.total_seconds()
+    if delta > 60 * 60 * 5:
+        return '알 수 없음'
+
     m = int(delta / 60)
     if m < 10:
         m = '0' + str(m)
