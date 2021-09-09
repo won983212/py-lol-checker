@@ -41,7 +41,7 @@ def run():
             return
 
     print('Start watching...')
-    send_message('게임 추적을 시작합니다.', '롤 게임 추적기')
+    send_message('게임 추적을 시작합니다. \n추적 대상: ' + ", ".join(config.TARGET_PLAYERS), '롤 게임 추적기')
     while True:
         try:
             for player in playerIDs:
@@ -50,13 +50,15 @@ def run():
                     if not player['playing']:
                         player['playing'] = True
                         start_time = datetime.fromtimestamp(spectator['gameStartTime'] / 1000)
-                        message = '{}님이 게임중입니다! 시작 시각: {}, 진행 시간: {}'.format(player['data']['name'],
-                                                                            start_time.strftime('%H:%M:%S'),
-                                                                            to_timespan(datetime.now() - start_time))
+                        message = '{}님이 게임중입니다! (게임 시간: {})'.format(player['data']['name'], to_timespan(datetime.now() - start_time))
                         print(message)
                         send_message(message, '롤 게임 추적기')
                 except HTTPError:
-                    player['playing'] = False
+                    if player['playing']:
+                        player['playing'] = False
+                        message = player['data']['name'] + '님 게임이 끝났습니다.'
+                        print(message)
+                        send_message(message, '롤 게임 추적기')
                     pass
         except BaseException as error:
             print('Unexpected exception: {}'.format(error))
