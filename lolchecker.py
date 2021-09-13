@@ -58,6 +58,8 @@ def run():
                     if not player['playing']:
                         player['playing'] = True
                         start_time = datetime.fromtimestamp(spectator['gameStartTime'] / 1000)
+                        print('[Debug] NOW: ' + datetime.now().strftime("%Y/%m/%d, %H:%M:%S"))
+                        print('[Debug] start: ' + start_time.strftime("%Y/%m/%d, %H:%M:%S"))
                         message = '{}님이 게임중입니다! (게임 시간: {})'.format(player['data']['name'], to_timespan(datetime.now() - start_time))
                         print(message)
                         send_message(message, '롤 게임 추적기')
