@@ -1,4 +1,4 @@
-from riotwatcher import LolWatcher
+from riotwatcher import LolWatcher, ApiError
 from requests.exceptions import HTTPError
 from datetime import datetime
 from pyfcm import FCMNotification
@@ -13,7 +13,7 @@ push_service = FCMNotification(config.FCM_API_KEY)
 def to_timespan(delta):
     delta = delta.total_seconds()
     if delta > 60 * 60 * 5:
-        return '알 수 없음'
+        return '방금 전'
 
     m = int(delta / 60)
     if m < 10:
@@ -51,7 +51,7 @@ def run():
         time_phase += 1
         try:
             for player in playerIDs:
-                if not player['playing'] and time_phase % 4 != 0:
+                if not player['playing'] and time_phase % config.TIMES_OF_DETECT_PERIOD_ON_PLAYING != 0:
                     continue
                 try:
                     spectator = lol_watcher.spectator.by_summoner('kr', player['data']['id'])
@@ -67,7 +67,6 @@ def run():
                         message = player['data']['name'] + '님 게임이 끝났습니다.'
                         print(message)
                         send_message(message, '롤 게임 추적기')
-                    pass
         except BaseException as error:
             print('Unexpected exception: {}'.format(error))
         time.sleep(config.DETECT_PERIOD_SEC / config.TIMES_OF_DETECT_PERIOD_ON_PLAYING)
