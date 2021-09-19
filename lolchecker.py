@@ -1,10 +1,9 @@
 from riotwatcher import LolWatcher
 from requests.exceptions import HTTPError
-from datetime import datetime
+from datetime import datetime, timedelta
 from pyfcm import FCMNotification
 import config
 import time
-
 
 print('Registering API Keys')
 lol_watcher = LolWatcher(config.RIOT_API_KEY)
@@ -27,6 +26,14 @@ def calculate_playing_time(start_timestamp):
     if s < 10:
         s = '0' + str(s)
     return '{}:{}'.format(m, s)
+
+
+def is_over_time(start_time, duration):
+    if start_time is None:
+        return False
+    if (datetime.now() - start_time).seconds >= duration:
+        return True
+    return False
 
 
 def send_message(body, title):
@@ -53,7 +60,8 @@ def run():
         try:
             playerIDs.append({
                 'data': lol_watcher.summoner.by_name('kr', name),
-                'playing': False
+                'playing': False,
+                'finishTime': None
             })
         except HTTPError:
             print('Incorrect player name: ' + name)
@@ -72,7 +80,7 @@ def run():
                     debug("Check " + player['data']['name'])
                     spectator = lol_watcher.spectator.by_summoner('kr', player['data']['id'])
                     debug(str(spectator))
-                    if not player['playing']:
+                    if not player['playing'] and is_over_time(player['finishTime'], 60):
                         player['playing'] = True
                         start_time = calculate_playing_time(spectator['gameStartTime'])
                         message = '{}님이 게임중입니다! (게임 시간: {})'.format(player['data']['name'], start_time)
@@ -83,6 +91,7 @@ def run():
                     if player['playing']:
                         player['playing'] = False
                         message = player['data']['name'] + '님 게임이 끝났습니다.'
+                        player['finishTime'] = datetime.now()
                         info(message)
                         send_message(message, '롤 게임 추적기')
         except BaseException as error:
