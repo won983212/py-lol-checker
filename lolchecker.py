@@ -30,7 +30,7 @@ def calculate_playing_time(start_timestamp):
 
 def is_over_time(start_time, duration):
     if start_time is None:
-        return False
+        return True
     if (datetime.now() - start_time).seconds >= duration:
         return True
     return False
@@ -80,7 +80,7 @@ def run():
                     debug("Check " + player['data']['name'])
                     spectator = lol_watcher.spectator.by_summoner('kr', player['data']['id'])
                     debug(str(spectator))
-                    if not player['playing'] and is_over_time(player['finishTime'], 60):
+                    if not player['playing'] and is_over_time(player['finishTime'], config.WAITING_AFTER_GAMEEND_SEC):
                         player['playing'] = True
                         start_time = calculate_playing_time(spectator['gameStartTime'])
                         message = '{}님이 게임중입니다! (게임 시간: {})'.format(player['data']['name'], start_time)
