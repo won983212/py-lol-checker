@@ -1,6 +1,6 @@
 from riotwatcher import LolWatcher
 from requests.exceptions import HTTPError
-from datetime import datetime, timedelta
+from datetime import datetime
 from pyfcm import FCMNotification
 import config
 import time
@@ -17,8 +17,11 @@ def calculate_playing_time(start_timestamp):
     if start_timestamp == 0 or now < start_time:
         return '00:00'
 
-    delta = (now - start_time).total_seconds()
+    return (now - start_time).total_seconds()
 
+
+def get_formatted_playing_time(start_timestamp):
+    delta = calculate_playing_time(start_timestamp)
     m = int(delta / 60)
     if m < 10:
         m = '0' + str(m)
@@ -28,16 +31,8 @@ def calculate_playing_time(start_timestamp):
     return '{}:{}'.format(m, s)
 
 
-def is_over_time(start_time, duration):
-    if start_time is None:
-        return True
-    if (datetime.now() - start_time).seconds >= duration:
-        return True
-    return False
-
-
 def send_message(body, title):
-    result = push_service.notify_topic_subscribers(topic_name="alert", data_message={
+    push_service.notify_topic_subscribers(topic_name="alert", data_message={
         "body": body,
         "title": title
     })
@@ -52,6 +47,12 @@ def debug(message):
         print("Debug[t=" + str(time_phase) + "]: " + message)
 
 
+def is_in_time(start_timestamp, duration):
+    delta = calculate_playing_time(start_timestamp)
+    m = int(delta / 60)
+    return m <= duration
+
+
 def run():
     global time_phase
     playerIDs = []
@@ -61,7 +62,7 @@ def run():
             playerIDs.append({
                 'data': lol_watcher.summoner.by_name('kr', name),
                 'playing': False,
-                'finishTime': None
+                'isFirst': True
             })
         except HTTPError:
             print('Incorrect player name: ' + name)
@@ -80,9 +81,10 @@ def run():
                     debug("Check " + player['data']['name'])
                     spectator = lol_watcher.spectator.by_summoner('kr', player['data']['id'])
                     debug(str(spectator))
-                    if not player['playing'] and is_over_time(player['finishTime'], config.WAITING_AFTER_GAMEEND_SEC):
+                    if not player['playing'] and (player['isFirst'] or is_in_time(spectator['gameStartTime'], config.FILTERING_GAME_TIME_MIN)):
                         player['playing'] = True
-                        start_time = calculate_playing_time(spectator['gameStartTime'])
+                        player['isFirst'] = False
+                        start_time = get_formatted_playing_time(spectator['gameStartTime'])
                         message = '{}님이 게임중입니다! (게임 시간: {})'.format(player['data']['name'], start_time)
                         info(message)
                         send_message(message, '롤 게임 추적기')
@@ -91,7 +93,6 @@ def run():
                     if player['playing']:
                         player['playing'] = False
                         message = player['data']['name'] + '님 게임이 끝났습니다.'
-                        player['finishTime'] = datetime.now()
                         info(message)
                         send_message(message, '롤 게임 추적기')
         except BaseException as error:
