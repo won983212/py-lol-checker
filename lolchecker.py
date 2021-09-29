@@ -15,7 +15,7 @@ def calculate_playing_time(start_timestamp):
     now = datetime.now()
     start_time = datetime.fromtimestamp(start_timestamp / 1000)
     if start_timestamp == 0 or now < start_time:
-        return '00:00'
+        return 0
 
     return (now - start_time).total_seconds()
 
