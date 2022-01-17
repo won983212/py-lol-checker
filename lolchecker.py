@@ -32,14 +32,12 @@ def get_formatted_playing_time(start_timestamp):
 
 
 def send_message(body, title):
+    message = "[{}] {}".format(datetime.now().strftime("%H:%M:%S"), body)
     push_service.notify_topic_subscribers(topic_name="alert", data_message={
-        "body": "[{}] {}".format(datetime.now().strftime("%H:%M:%S"), body),
+        "body": message,
         "title": title
     })
-
-
-def info(message):
-    print("Info[t=" + str(time_phase) + "]: " + message)
+    print(message)
 
 
 def debug(message):
@@ -86,14 +84,12 @@ def run():
                         player['isFirst'] = False
                         start_time = get_formatted_playing_time(spectator['gameStartTime'])
                         message = '{}님이 게임중입니다! (게임 시간: {})'.format(player['data']['name'], start_time)
-                        info(message)
                         send_message(message, '롤 게임 추적기')
                 except HTTPError as error:
                     debug(str(error))
                     if player['playing']:
                         player['playing'] = False
                         message = player['data']['name'] + '님 게임이 끝났습니다.'
-                        info(message)
                         send_message(message, '롤 게임 추적기')
         except BaseException as error:
             print('Unexpected exception: {}'.format(error))
