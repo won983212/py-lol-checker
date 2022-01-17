@@ -33,7 +33,7 @@ def get_formatted_playing_time(start_timestamp):
 
 def send_message(body, title):
     push_service.notify_topic_subscribers(topic_name="alert", data_message={
-        "body": body,
+        "body": "[{}] {}".format(datetime.now().strftime("%H:%M:%S"), body),
         "title": title
     })
 
