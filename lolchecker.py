@@ -34,6 +34,7 @@ def get_formatted_playing_time(start_timestamp):
 def send_message(body, title):
     message = "[{}] {}".format(datetime.now().strftime("%H:%M:%S"), body)
     push_service.notify_topic_subscribers(topic_name="alert", data_message={
+        "icon": 'game',
         "body": message,
         "title": title
     })
