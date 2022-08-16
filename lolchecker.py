@@ -52,6 +52,15 @@ def is_in_time(start_timestamp, duration):
     return m <= duration
 
 
+def contains(players):
+    if len(config.WHITELIST_WITH_PLAYERS) == 0:
+        return False
+    for player in players:
+        if player['summonerName'] in config.WHITELIST_WITH_PLAYERS:
+            return True
+    return False
+
+
 def run():
     global time_phase
     playerIDs = []
@@ -80,7 +89,8 @@ def run():
                     debug("Check " + player['data']['name'])
                     spectator = lol_watcher.spectator.by_summoner('kr', player['data']['id'])
                     debug(str(spectator))
-                    if not player['playing'] and (player['isFirst'] or is_in_time(spectator['gameStartTime'], config.FILTERING_GAME_TIME_MIN)):
+                    if not contains(spectator['participants']) and not player['playing'] and \
+                            (player['isFirst'] or is_in_time(spectator['gameStartTime'], config.FILTERING_GAME_TIME_MIN)):
                         player['playing'] = True
                         player['isFirst'] = False
                         start_time = get_formatted_playing_time(spectator['gameStartTime'])
@@ -88,7 +98,7 @@ def run():
                         send_message(message, '롤 게임 추적기')
                 except HTTPError as error:
                     debug(str(error))
-                    if player['playing']:
+                    if error.response.status_code != 500 and player['playing']:
                         player['playing'] = False
                         message = player['data']['name'] + '님 게임이 끝났습니다.'
                         send_message(message, '롤 게임 추적기')

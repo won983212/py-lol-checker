@@ -4,6 +4,7 @@ FCM_API_KEY = "<FCM-API-KEY>"
 
 # Targets
 TARGET_PLAYERS = []
+WHITELIST_WITH_PLAYERS = []
 
 # Detect config
 DETECT_PERIOD_SEC = 60
